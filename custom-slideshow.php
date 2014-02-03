@@ -60,7 +60,7 @@ function custom_slideshow_admin_init() {
 
 function custom_slideshow_admin_menu() {	
 	// Page title, Menu title, Capability, Menu Slug, Function, Icon URL
-	$page = add_menu_page("Slideshows", "Slideshows", "upload_files", "custom-slideshow-images", "custom_slideshow_images_admin_page", plugins_url("/images/icon.png", __FILE__));
+	$page = add_menu_page("Slideshows", "Slideshows", "upload_files", "custom-slideshow-images", "custom_slideshow_images_admin_page", plugins_url("/images/icon.png", __FILE__), "50.5");
 
 	// Use registered $page handle to hook stylesheets
 	add_action("admin_print_styles-" . $page, "custom_slideshow_admin_styles");
@@ -101,7 +101,6 @@ function custom_slideshow_convert_pages_to_array() {
 	global $wpdb;
 	// Get page IDs, add into array
 	$custom_slideshow_pages = get_pages(array('sort_column' => 'menu_order'));
-	$custom_slideshow_services = get_posts(array('numberposts' => -1, 'post_type' => 'services', 'orderby' => 'menu_order', 'order' => 'ASC'));
 	$page_ids = array();
 	$page_titles = array();
 	$page_titles_hierarchical = array();
@@ -116,39 +115,6 @@ function custom_slideshow_convert_pages_to_array() {
 				array_push($page_titles_hierarchical, "&ndash; " . stripslashes($custom_slideshow_page->post_title));
 			} else {
 				array_push($page_titles_hierarchical, stripslashes($custom_slideshow_page->post_title));
-			}
-			
-			// Loop through the individual Services if the Services page was just output
-			if($custom_slideshow_page->ID == 7) {
-				if(!empty($custom_slideshow_services)) {	
-					foreach($custom_slideshow_services as $custom_slideshow_service) {
-						array_push($page_ids, $custom_slideshow_service->ID);
-						array_push($page_titles, stripslashes($custom_slideshow_service->post_title));
-						
-						// All pages are sub-pages, so include the dash
-						array_push($page_titles_hierarchical, "&ndash; " . stripslashes($custom_slideshow_service->post_title));
-						
-						$category_projects = new WP_Query(array('posts_per_page' => -1, 
-							'tax_query' => array(
-								array(
-									'taxonomy' => 'services-provided',
-									'field' => 'slug',
-									'terms' => $custom_slideshow_service->post_name
-								)
-							)
-						));
-						
-						if($category_projects->have_posts()) while($category_projects->have_posts()) { $category_projects->the_post();
-
-							array_push($page_ids, get_the_ID());
-							array_push($page_titles, get_the_title());
-							
-							// All pages are sub-pages, so include the dash
-							array_push($page_titles_hierarchical, "&nbsp;&nbsp;&nbsp;&ndash; " . get_the_title());
-					
-						} wp_reset_postdata(); // End if projects
-					}
-				}
 			}
 		}
 	}
@@ -199,10 +165,10 @@ function custom_slideshow_images_admin_page() {
 function custom_slideshow_handle_upload() {
 	global $wpdb;
 	
-	$min_width = 583;
-	$min_height = 381;
-	$thumb_width = 394;
-	$thumb_height = 258;
+	$min_width = 600;
+	$min_height = 400;
+	$thumb_width = 300;
+	$thumb_height = 200;
 	
 	// Upload the image
 	$upload = wp_handle_upload($_FILES['slideshow_image'], 0);
@@ -378,7 +344,7 @@ function custom_slideshow_images_admin() {
 			</th>
 			<td>
 				<input type="file" name="slideshow_image" id="slideshow_image" />
-				<p class="description">Images will be resized to fit automatically. Minimum size is 583px wide by 381px high.</p>
+				<p class="description">Images will be resized to fit automatically. Minimum size is 600px wide by 400px high.</p>
 			</td>
 		</tr>
 		<tr>
@@ -491,7 +457,7 @@ function custom_slideshow_images_admin() {
 }
 
 // Front-end code
-function display_custom_slideshow($page_id, $large_image = false, $project_url = "") {
+function display_custom_slideshow($page_id, $large_image = false) {
 	global $wpdb;
 	$custom_slideshow_images = $wpdb->get_results("SELECT `file_url`, `thumb_url`, `file_description` FROM `" . CUSTOM_SLIDESHOW_IMAGES_TABLE . "` WHERE `page_id` = '". $page_id . "' ORDER BY `sort_order` ASC");
 	
@@ -508,7 +474,7 @@ function display_custom_slideshow($page_id, $large_image = false, $project_url =
 				$img_src = $custom_slideshow_image->thumb_url;
 			}
 ?>
-						<li><?php if($project_url != "") { ?><a href="<?php echo $project_url; ?>" title="<?php the_title(); ?> website (opens in new window)" target="_blank"><?php } ?><img src="<?php echo $img_src; ?>" alt="<?php echo stripslashes($custom_slideshow_image->file_description); ?>" /><?php if($project_url != "") { ?></a><?php } ?></li>
+						<li><img src="<?php echo $img_src; ?>" alt="<?php echo stripslashes($custom_slideshow_image->file_description); ?>" /></li>
 <?php } // End foreach ?>
 					</ul>
 				</figure>
