@@ -457,7 +457,7 @@ function custom_slideshow_images_admin() {
 }
 
 // Front-end code
-function display_custom_slideshow($page_id, $large_image = false) {
+function display_custom_slideshow($page_id, $small = false) {
 	global $wpdb;
 	$custom_slideshow_images = $wpdb->get_results("SELECT `file_url`, `thumb_url`, `file_description` FROM `" . CUSTOM_SLIDESHOW_IMAGES_TABLE . "` WHERE `page_id` = '". $page_id . "' ORDER BY `sort_order` ASC");
 	
@@ -468,10 +468,10 @@ function display_custom_slideshow($page_id, $large_image = false) {
 					<ul class="slides">
 <?php
 		foreach($custom_slideshow_images as $custom_slideshow_image) {
-			if($large_image) {
-				$img_src = $custom_slideshow_image->file_url;
-			} else {
+			if($small) {
 				$img_src = $custom_slideshow_image->thumb_url;
+			} else {
+				$img_src = $custom_slideshow_image->file_url;
 			}
 ?>
 						<li><img src="<?php echo $img_src; ?>" alt="<?php echo stripslashes($custom_slideshow_image->file_description); ?>" /></li>
@@ -481,4 +481,21 @@ function display_custom_slideshow($page_id, $large_image = false) {
 <?php
 	}
 }
+
+function show_custom_slideshow($atts) {
+	extract(shortcode_atts(array(
+		'small' => ''
+	), $atts));
+
+	if(is_page()) {
+		$id = get_the_ID();
+	} else {
+		$id = NULL;
+	}
+
+	return display_custom_slideshow($id, $small);
+}
+
+add_shortcode('slideshow', 'show_custom_slideshow');
+
 ?>
